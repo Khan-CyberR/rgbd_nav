@@ -14,15 +14,13 @@ env DISPLAY=:0 XDG_SESSION_TYPE=x11 GLFW_PLATFORM=x11 python3 -c "import open3d 
 
 # 栅格地图
 
-*使用pointcloud_to_grid包，当前环境编译grid_map_cv失败，暂时跳过。*
-source /opt/ros/humble/setup.bash
-colcon build --packages-select grid_map_cmake_helpers grid_map_core grid_map_msgs --symlink-install
-source install/setup.bash 
+colcon build --packages-select pointcloud_to_occupancy
 
-*open3d格式的ply文件无intensity信息，跳过显示*
+*发布点云话题*
+python3 publish_pointcloud.py
 
-ros2 launch pointcloud_to_grid demo.launch.py
+*启动栅格地图生成以及rviz可视化*
+ros2 launch pointcloud_to_occupancy occupancy_with_rviz.launch.py 
 
-ros2 launch pointcloud_to_grid rviz.launch.py 
-
-python3 publish_pointcloud.py 
+*保存栅格地图*
+ros2 run nav2_map_server map_saver_cli -f ~/rgbd_nav/maps/my_occupancy_map --ros-args -r /map:=/occupancy_grid

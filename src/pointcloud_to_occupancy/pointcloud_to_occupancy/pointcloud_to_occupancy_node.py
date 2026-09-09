@@ -5,6 +5,7 @@ from sensor_msgs.msg import PointCloud2
 import sensor_msgs_py.point_cloud2 as pc2
 from nav_msgs.msg import OccupancyGrid
 import numpy as np
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
 class PointCloudToOccupancy(Node):
     def __init__(self):
@@ -43,11 +44,19 @@ class PointCloudToOccupancy(Node):
         )
         self.get_logger().info(f'Subscribing to {self.cloud_topic}')
 
-        self.publisher = self.create_publisher(OccupancyGrid, self.map_topic, 10)
+        qos_map = QoSProfile(
+            depth=10,
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL
+        )
+
+        self.publisher = self.create_publisher(OccupancyGrid, self.map_topic, qos_map)
         self.get_logger().info(f'Publishing to {self.map_topic}')
 
         self.grid_data = np.full(self.width_px * self.height_px, -1, dtype=np.int8)
         self.timer = self.create_timer(0.1, self.publish_map)
+
+
 
     def cloud_callback(self, msg):
         try:
@@ -83,6 +92,7 @@ class PointCloudToOccupancy(Node):
 
         except Exception as e:
             self.get_logger().error(f'Error processing point cloud: {e}')
+
 
     def publish_map(self):
         grid_msg = OccupancyGrid()
